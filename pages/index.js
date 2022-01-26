@@ -38,8 +38,8 @@ export default function PaginaInicial() {
   // const username = "MorenaNobre";
   const roteamento = useRouter();
   const [username, setUsername] = useState("");
-  const [userBio, setUserBio] = useState("");
-  const [userCompany, setUserCompany] = useState("");
+  const [userbio, setUserBio] = useState("");
+  const [usercompany, setUserCompany] = useState("");
   const userURL = `https://api.github.com/users/${username}`;
 
   function handleChange(event) {
@@ -204,7 +204,7 @@ export default function PaginaInicial() {
                 >
                   {username}
                 </Text>
-                <Text
+                {/* <Text
                   variant="body4"
                   styleSheet={{
                     color: appConfig.theme.colors.neutrals[200],
@@ -213,8 +213,8 @@ export default function PaginaInicial() {
                     borderRadius: "1000px",
                   }}
                 >
-                  {userBio}
-                </Text>
+                  {userbio}
+                </Text> */}
               </>
             )}
           </Box>
