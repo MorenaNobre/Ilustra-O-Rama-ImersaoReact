@@ -19,7 +19,8 @@
         "pink": "#F2059F",
         "orange": "#F25C05",
         "red": "#F23005",
-        "purple": "#cc029a"
+        "purple": "#cc029a",
+        "purple-light": "#c66bb0"
       },
       "neutrals": {
         "000": "#FFFFFF",

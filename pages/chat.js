@@ -1,11 +1,31 @@
 import { Box, Text, TextField, Image, Button } from "@skynexui/components";
-import React from "react";
+import React, { useState } from "react";
 import appConfig from "../config.json";
 
 export default function ChatPage() {
-  // Sua lógica vai aqui
+  const [message, setMessage] = useState("");
+  const [messageList, setMessageList] = useState([]);
 
-  // ./Sua lógica vai aqui
+  function handleNewMessage(newMessage) {
+    const message = {
+      id: messageList.length + Math.random() * 100,
+      text: newMessage,
+      user: "MorenaNobre",
+    };
+
+    setMessageList([message, ...messageList]);
+    setMessage("");
+  }
+
+  function handleDeleteMessage(event) {
+    const messageId = Number(event.target.dataset.id);
+    const messageListFiltered = messageList.filter((messageFiltered) => {
+      return messageFiltered.id != messageId;
+    });
+
+    setMessageList(messageListFiltered);
+  }
+
   return (
     <Box
       styleSheet={{
@@ -13,10 +33,10 @@ export default function ChatPage() {
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: appConfig.theme.colors.primary[500],
-        backgroundImage: `url(https://a-static.besthdwallpaper.com/multicolored-doodle-pattern-wallpaper-3440x1440-82651_15.jpg)`,
+        backgroundImage:
+          "url(https://a-static.besthdwallpaper.com/multicolored-doodle-pattern-wallpaper-3440x1440-82651_15.jpg)",
         backgroundRepeat: "no-repeat",
         backgroundSize: "cover",
-        // backgroundBlendMode: "multiply",
         color: appConfig.theme.colors.neutrals["000"],
       }}
     >
@@ -47,7 +67,20 @@ export default function ChatPage() {
             padding: "16px",
           }}
         >
-          {/* <MessageList mensagens={[]} /> */}
+          <MessageList
+            messageList={messageList}
+            handleDeleteMessage={handleDeleteMessage}
+          />
+          {/* Lista de mensagens:
+                    <ul>
+                        {messageList.map((messageItem) => {
+                            return (
+                                <li key={messageItem.id}>
+                                    {messageItem.user}: {messageItem.text}
+                                </li>
+                            )
+                        })}
+                    </ul> */}
 
           <Box
             as="form"
@@ -57,6 +90,16 @@ export default function ChatPage() {
             }}
           >
             <TextField
+              value={message}
+              onChange={(event) => {
+                setMessage(event.target.value);
+              }}
+              onKeyPress={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  handleNewMessage(message);
+                }
+              }}
               placeholder="Insira sua mensagem aqui..."
               type="textarea"
               styleSheet={{
@@ -68,6 +111,20 @@ export default function ChatPage() {
                 backgroundColor: appConfig.theme.colors.neutrals[800],
                 marginRight: "12px",
                 color: appConfig.theme.colors.neutrals[200],
+              }}
+            />
+            <Button
+              onClick={() => {handleNewMessage(message)}}
+              label="Enviar"
+              fullWidth
+              styleSheet={{
+                maxWidth: "100px",
+              }}
+              buttonColors={{
+                contrastColor: appConfig.theme.colors.neutrals["000"],
+                mainColor: appConfig.theme.colors.primary.purple,
+                mainColorLight: appConfig.theme.colors.primary[400],
+                mainColorStrong: appConfig.theme.colors.primary["purple-light"],
               }}
             />
           </Box>
@@ -102,12 +159,13 @@ function Header() {
 }
 
 function MessageList(props) {
-  console.log("MessageList", props);
+  const handleDeleteMessage = props.handleDeleteMessage;
+
   return (
     <Box
       tag="ul"
       styleSheet={{
-        overflow: "scroll",
+        overflow: "auto",
         display: "flex",
         flexDirection: "column-reverse",
         flex: 1,
@@ -115,47 +173,85 @@ function MessageList(props) {
         marginBottom: "16px",
       }}
     >
-      <Text
-        key={mensagem.id}
-        tag="li"
-        styleSheet={{
-          borderRadius: "5px",
-          padding: "6px",
-          marginBottom: "12px",
-          hover: {
-            backgroundColor: appConfig.theme.colors.neutrals[700],
-          },
-        }}
-      >
-        <Box
-          styleSheet={{
-            marginBottom: "8px",
-          }}
-        >
-          <Image
-            styleSheet={{
-              width: "20px",
-              height: "20px",
-              borderRadius: "50%",
-              display: "inline-block",
-              marginRight: "8px",
-            }}
-            src={`https://github.com/vanessametonini.png`}
-          />
-          <Text tag="strong">{mensagem.de}</Text>
+      {props.messageList.map((messageItem) => {
+        return (
           <Text
+            key={messageItem.id}
+            tag="li"
             styleSheet={{
-              fontSize: "10px",
-              marginLeft: "8px",
-              color: appConfig.theme.colors.neutrals[300],
+              borderRadius: "5px",
+              padding: "6px",
+              marginBottom: "12px",
+              wordBreak: "break-word",
+              hover: {
+                backgroundColor: "rgba( 0, 0, 0, 0.21 )",
+              },
             }}
-            tag="span"
           >
-            {new Date().toLocaleDateString()}
+            <Box
+              styleSheet={{
+                marginBottom: "8px",
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <Image
+                styleSheet={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  display: "inline-block",
+                  marginRight: "8px",
+                }}
+                src={`https://github.com/${messageItem.user}.png`}
+              />
+              <Box
+                styleSheet={{
+                  position: "relative",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "start",
+                }}
+              >
+                <Text tag="strong">{messageItem.user}</Text>
+                <Text
+                  styleSheet={{
+                    fontSize: "10px",
+                    marginTop: "5px",
+                    color: appConfig.theme.colors.neutrals[300],
+                  }}
+                  tag="span"
+                >
+                  {new Date().toLocaleDateString()}
+                </Text>
+              </Box>
+              <Text
+                onClick={handleDeleteMessage}
+                styleSheet={{
+                  fontSize: "10px",
+                  fontWeight: "bold",
+                  marginLeft: "auto",
+                  color: "#FFF",
+                  backgroundColor: "rgba(0,0,0,.5)",
+                  width: "20px",
+                  height: "20px",
+                  borderRadius: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                }}
+                tag="span"
+                data-id={messageItem.id}
+              >
+                X
+              </Text>
+            </Box>
+            {messageItem.text}
           </Text>
-        </Box>
-        {mensagem.texto}
-      </Text>
+        );
+      })}
     </Box>
   );
 }

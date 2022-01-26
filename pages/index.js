@@ -40,7 +40,7 @@ export default function PaginaInicial() {
   const [username, setUsername] = useState("");
   const [userbio, setUserBio] = useState("");
   const [usercompany, setUserCompany] = useState("");
-  const userURL = `https://api.github.com/users/${username}`;
+  const userURL = `https://api.github.com/users/`;
 
   function handleChange(event) {
     setUsername(event.target.value);
@@ -204,7 +204,7 @@ export default function PaginaInicial() {
                 >
                   {username}
                 </Text>
-                {/* <Text
+                <Text
                   variant="body4"
                   styleSheet={{
                     color: appConfig.theme.colors.neutrals[200],
@@ -214,7 +214,7 @@ export default function PaginaInicial() {
                   }}
                 >
                   {userbio}
-                </Text> */}
+                </Text>
               </>
             )}
           </Box>
