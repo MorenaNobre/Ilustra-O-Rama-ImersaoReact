@@ -40,7 +40,7 @@ export default function PaginaInicial() {
   const [username, setUsername] = useState("");
   const [userbio, setUserBio] = useState("");
   const [usercompany, setUserCompany] = useState("");
-  const userURL = `https://api.github.com/users/`;
+  const userURL = `https://api.github.com/users/${username}`;
 
   function handleChange(event) {
     setUsername(event.target.value);

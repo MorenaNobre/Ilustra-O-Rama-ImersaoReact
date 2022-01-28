@@ -1,19 +1,48 @@
 import { Box, Text, TextField, Image, Button } from "@skynexui/components";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import appConfig from "../config.json";
+import { createClient } from "@supabase/supabase-js";
+
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzM3NTIwOSwiZXhwIjoxOTU4OTUxMjA5fQ.JUYl_gU17WeGYT3MWpJI1kqVxH-8ep3R5ysPmEWUjIg";
+const SUPABASE_URL = "https://cpenhckfwnprkyxeqvkv.supabase.co";
+
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export default function ChatPage() {
   const [message, setMessage] = useState("");
   const [messageList, setMessageList] = useState([]);
+  //o backend será o array acima. Salvo em servidor remoto - supabase.
+
+  useEffect(() => {
+    supabaseClient
+      .from("message")
+      .select("*")
+      .order("id", { ascending: false })
+      .then(({ data }) => {
+        console.log("Query data", data);
+        setMessageList(data);
+      });
+  }, []);
 
   function handleNewMessage(newMessage) {
     const message = {
-      id: messageList.length + Math.random() * 100,
+      // id: messageList.length + Math.random() * 100,
       text: newMessage,
       user: "MorenaNobre",
     };
 
-    setMessageList([message, ...messageList]);
+    supabaseClient
+      .from("message")
+      .insert([
+        //The Object needs to have the same fields that are seted in supabase.
+        message,
+      ])
+      .then(({ data }) => {
+        // console.log("Creating message: ", data);
+        setMessageList([data[0], ...messageList]);
+      });
+
     setMessage("");
   }
 
@@ -114,7 +143,9 @@ export default function ChatPage() {
               }}
             />
             <Button
-              onClick={() => {handleNewMessage(message)}}
+              onClick={() => {
+                handleNewMessage(message);
+              }}
               label="Enviar"
               fullWidth
               styleSheet={{
