@@ -1,17 +1,26 @@
 import { Box, Text, TextField, Image, Button } from "@skynexui/components";
 import React, { useEffect, useState } from "react";
-import appConfig from "../config.json";
+import { useRouter } from "next/router";
 import { createClient } from "@supabase/supabase-js";
+import appConfig from "../config.json";
+import { ButtonSendSticker } from "../src/components/ButtonSendSticker";
 
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzM3NTIwOSwiZXhwIjoxOTU4OTUxMjA5fQ.JUYl_gU17WeGYT3MWpJI1kqVxH-8ep3R5ysPmEWUjIg";
 const SUPABASE_URL = "https://cpenhckfwnprkyxeqvkv.supabase.co";
-
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export default function ChatPage() {
+  const roteamento = useRouter();
+  const loggedUser = roteamento.query.username;
   const [message, setMessage] = useState("");
-  const [messageList, setMessageList] = useState([]);
+  const [messageList, setMessageList] = useState([
+    {
+      id: 1,
+      user: "MorenaNobre",
+      text: ":sticker: URL_da_imagem",
+    }
+  ]);
   //o backend será o array acima. Salvo em servidor remoto - supabase.
 
   useEffect(() => {
@@ -21,7 +30,7 @@ export default function ChatPage() {
       .order("id", { ascending: false })
       .then(({ data }) => {
         console.log("Query data", data);
-        setMessageList(data);
+        // setMessageList(data);
       });
   }, []);
 
@@ -29,7 +38,7 @@ export default function ChatPage() {
     const message = {
       // id: messageList.length + Math.random() * 100,
       text: newMessage,
-      user: "MorenaNobre",
+      user: loggedUser,
     };
 
     supabaseClient
@@ -142,6 +151,7 @@ export default function ChatPage() {
                 color: appConfig.theme.colors.neutrals[200],
               }}
             />
+            <ButtonSendSticker />
             <Button
               onClick={() => {
                 handleNewMessage(message);

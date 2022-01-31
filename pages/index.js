@@ -97,7 +97,7 @@ export default function PaginaInicial() {
             as="form"
             onSubmit={function (infosDoEvento) {
               infosDoEvento.preventDefault();
-              roteamento.push("/chat");
+              roteamento.push(`/chat?username=${username}`);
               // window.location.href = "/chat";
             }}
             styleSheet={{
@@ -209,8 +209,10 @@ export default function PaginaInicial() {
                   styleSheet={{
                     color: appConfig.theme.colors.neutrals[200],
                     backgroundColor: appConfig.theme.colors.neutrals[900],
-                    padding: "3px 10px",
-                    borderRadius: "1000px",
+                    justifyContent: "center",
+                    padding: "6px 6px",
+                    borderRadius: "8px",
+                    marginTop: "4px",
                   }}
                 >
                   {userbio}
