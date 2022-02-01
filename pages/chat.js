@@ -10,16 +10,30 @@ const SUPABASE_ANON_KEY =
 const SUPABASE_URL = "https://cpenhckfwnprkyxeqvkv.supabase.co";
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// function listenMessagesInRealTime(addMessage) {
+//   return supabaseClient
+//     .from("message")
+//     .on("INSERT", ({ liveResponse }) => {
+//       addMessage(liveResponse.new);
+//     })
+//     .subscribe();
+// }
+
 export default function ChatPage() {
   const roteamento = useRouter();
   const loggedUser = roteamento.query.username;
   const [message, setMessage] = useState("");
   const [messageList, setMessageList] = useState([
-    {
-      id: 1,
-      user: "MorenaNobre",
-      text: ":sticker: URL_da_imagem",
-    }
+    // {
+    //   id: 1,
+    //   user: "MorenaNobre",
+    //   text: ":sticker: https://media4.giphy.com/media/xT8qBt2943MLRO8zuM/200w.webp?cid=ecf05e470cgja92exowltk0c2wecgzo9leolj5bh9rpr4js5&rid=200w.webp&ct=g",
+    // },
+    // {
+    //   id: 2,
+    //   user: "peas",
+    //   text: "o ternário é meio triste",
+    // }
   ]);
   //o backend será o array acima. Salvo em servidor remoto - supabase.
 
@@ -29,9 +43,13 @@ export default function ChatPage() {
       .select("*")
       .order("id", { ascending: false })
       .then(({ data }) => {
-        console.log("Query data", data);
-        // setMessageList(data);
+        // console.log("Query data", data);
+        setMessageList(data);
       });
+
+    // listenMessagesInRealTime((newMessage) => {
+    //   handleNewMessage(newMessage);
+    // });
   }, []);
 
   function handleNewMessage(newMessage) {
@@ -151,7 +169,13 @@ export default function ChatPage() {
                 color: appConfig.theme.colors.neutrals[200],
               }}
             />
-            <ButtonSendSticker />
+            {/* Callback */}
+            <ButtonSendSticker
+              onStickerClick={(sticker) => {
+                // console.log("[USANDO O COMPONENTE] salva o sticker no banco", sticker)
+                handleNewMessage(":sticker: " + sticker);
+              }}
+            />
             <Button
               onClick={() => {
                 handleNewMessage(message);
@@ -289,7 +313,17 @@ function MessageList(props) {
                 X
               </Text>
             </Box>
-            {messageItem.text}
+            {/* {messageItem.text.startsWith(':sticker:').toString()} */}
+            {messageItem.text.startsWith(":sticker:") ? (
+              <Image src={messageItem.text.replace(":sticker:", "")} />
+            ) : (
+              messageItem.text
+            )}
+            {/* if messageItem de texto possui stickers:
+                mostra a imagem
+            else
+                messageItem.texto */}
+            {/* {messageItem.text} */}
           </Text>
         );
       })}
