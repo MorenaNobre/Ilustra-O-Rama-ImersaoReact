@@ -1,85 +1,93 @@
 import { Box, Text, TextField, Image, Button } from "@skynexui/components";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import appConfig from "../config.json";
 import { useRouter } from "next/router";
 import { createClient } from "@supabase/supabase-js";
 import { ButtonSendSticker } from "../src/components/ButtonSendSticker";
 
-// Como fazer AJAX: https://medium.com/@omariosouto/entendendo-como-fazer-ajax-com-a-fetchapi-977ff20da3c6
-// const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MDg2OTA3MywiZXhwIjoxOTU2NDQ1MDczfQ.343ibq7UYFPDdyfsfGmEqUma01RW7P7KC9U2MDAGSkI';
-// const SUPABASE_URL = 'https://kysxypdmtxjlkdysdlas.supabase.co';
-// const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-//My Keys
 const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MzM3NTIwOSwiZXhwIjoxOTU4OTUxMjA5fQ.JUYl_gU17WeGYT3MWpJI1kqVxH-8ep3R5ysPmEWUjIg";
 const SUPABASE_URL = "https://cpenhckfwnprkyxeqvkv.supabase.co";
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-function escutaMensagensEmTempoReal(adicionaMensagem) {
+function listenMessagesInRealTime(addMessage) {
   return supabaseClient
-    .from("mensagens")
-    .on("INSERT", (respostaLive) => {
-      adicionaMensagem(respostaLive.new);
+    .from("message")
+    .on("INSERT", ({ liveResponse }) => {
+      addMessage(liveResponse.new);
     })
     .subscribe();
 }
 
 export default function ChatPage() {
   const roteamento = useRouter();
-  const usuarioLogado = roteamento.query.username;
-  const [mensagem, setMensagem] = React.useState("");
-  const [listaDeMensagens, setListaDeMensagens] = React.useState([]);
+  const loggedUser = roteamento.query.username;
+  const [message, setMessage] = useState("");
+  const [messageList, setMessageList] = useState([
+    // {
+    //   id: 1,
+    //   user: "MorenaNobre",
+    //   text: ":sticker: https://media4.giphy.com/media/xT8qBt2943MLRO8zuM/200w.webp?cid=ecf05e470cgja92exowltk0c2wecgzo9leolj5bh9rpr4js5&rid=200w.webp&ct=g",
+    // },
+    // {
+    //   id: 2,
+    //   user: "peas",
+    //   text: "o ternário é meio triste",
+    // }
+  ]);
+  //o backend será o array acima. Salvo em servidor remoto - supabase.
 
-  React.useEffect(() => {
+  useEffect(() => {
     supabaseClient
-      .from("mensagens")
+      .from("message")
       .select("*")
       .order("id", { ascending: false })
       .then(({ data }) => {
-        // console.log('Dados da consulta:', data);
-        setListaDeMensagens(data);
+        // console.log("Query data", data);
+        setMessageList(data);
       });
 
-    const subscription = escutaMensagensEmTempoReal((novaMensagem) => {
-      console.log("Nova mensagem:", novaMensagem);
-      console.log("listaDeMensagens:", listaDeMensagens);
-      // Quero reusar um valor de referencia (objeto/array)
-      // Passar uma função pro setState
+    // listenMessagesInRealTime((newMessage) => {
+    //   handleNewMessage(newMessage);
+    // });
+  }, []);
 
-      // setListaDeMensagens([
-      //     novaMensagem,
-      //     ...listaDeMensagens
-      // ])
-      setListaDeMensagens((valorAtualDaLista) => {
-        console.log("valorAtualDaLista:", valorAtualDaLista);
-        return [novaMensagem, ...valorAtualDaLista];
-      });
-    });
+  const subscription = listenMessagesInRealTime((newMessage) => {
+    console.log("New message", newMessage);
+    console.log("Message List", messageList);
+
+    setMessageList((listCurrentValue) => {
+      console.log("listCurrentValue", listCurrentValue);
+      return [
+        newMessage,
+        ...listCurrentValue,
+      ]
+    })
 
     return () => {
       subscription.unsubscribe();
-    };
-  }, []);
+    }
+  })
 
-  function handleNovaMensagem(novaMensagem) {
-    const mensagem = {
-      // id: listaDeMensagens.length + 1,
-      de: usuarioLogado,
-      texto: novaMensagem,
+  function handleNewMessage(newMessage) {
+    const message = {
+      // id: messageList.length + Math.random() * 100,
+      user: loggedUser,
+      text: newMessage,
     };
 
     supabaseClient
-      .from("mensagens")
+      .from("message")
       .insert([
-        // Tem que ser um objeto com os MESMOS CAMPOS que você escreveu no supabase
-        mensagem,
+        //The Object needs to have the same fields that are seted in supabase.
+        message,
       ])
       .then(({ data }) => {
-        console.log("Criando mensagem: ", data);
+        console.log("Creating message: ", data);
+        // setMessageList([data[0], ...messageList]);
       });
 
-    setMensagem("");
+    setMessage("");
   }
 
   function handleDeleteMessage(event) {
@@ -133,16 +141,20 @@ export default function ChatPage() {
           }}
         >
           <MessageList
-            mensagens={listaDeMensagens}
+            messageList={messageList}
             handleDeleteMessage={handleDeleteMessage}
           />
-          {/* {listaDeMensagens.map((mensagemAtual) => {
-                        return (
-                            <li key={mensagemAtual.id}>
-                                {mensagemAtual.de}: {mensagemAtual.texto}
-                            </li>
-                        )
-                    })} */}
+          {/* Lista de mensagens:
+                    <ul>
+                        {messageList.map((messageItem) => {
+                            return (
+                                <li key={messageItem.id}>
+                                    {messageItem.user}: {messageItem.text}
+                                </li>
+                            )
+                        })}
+                    </ul> */}
+
           <Box
             as="form"
             styleSheet={{
@@ -151,15 +163,16 @@ export default function ChatPage() {
             }}
           >
             <TextField
-              value={mensagem}
+              value={message}
               onChange={(event) => {
-                const valor = event.target.value;
-                setMensagem(valor);
+                // setMessage(event.target.value);
+                const value = event.target.value;
+                setMessage(value);
               }}
               onKeyPress={(event) => {
                 if (event.key === "Enter") {
                   event.preventDefault();
-                  handleNovaMensagem(mensagem);
+                  handleNewMessage(message);
                 }
               }}
               placeholder="Insira sua mensagem aqui..."
@@ -175,11 +188,27 @@ export default function ChatPage() {
                 color: appConfig.theme.colors.neutrals[200],
               }}
             />
-            {/* CallBack */}
+            {/* Callback */}
             <ButtonSendSticker
               onStickerClick={(sticker) => {
-                // console.log('[USANDO O COMPONENTE] Salva esse sticker no banco', sticker);
-                handleNovaMensagem(":sticker: " + sticker);
+                // console.log("[USANDO O COMPONENTE] salva o sticker no banco", sticker)
+                handleNewMessage(":sticker: " + sticker);
+              }}
+            />
+            <Button
+              onClick={() => {
+                handleNewMessage(message);
+              }}
+              label="Enviar"
+              fullWidth
+              styleSheet={{
+                maxWidth: "100px",
+              }}
+              buttonColors={{
+                contrastColor: appConfig.theme.colors.neutrals["000"],
+                mainColor: appConfig.theme.colors.primary.purple,
+                mainColorLight: appConfig.theme.colors.primary[400],
+                mainColorStrong: appConfig.theme.colors.primary["purple-light"],
               }}
             />
           </Box>
@@ -215,12 +244,12 @@ function Header() {
 
 function MessageList(props) {
   const handleDeleteMessage = props.handleDeleteMessage;
-  // console.log(props);
+
   return (
     <Box
       tag="ul"
       styleSheet={{
-        overflow: "scroll",
+        overflow: "auto",
         display: "flex",
         flexDirection: "column-reverse",
         flex: 1,
@@ -228,10 +257,10 @@ function MessageList(props) {
         marginBottom: "16px",
       }}
     >
-      {props.mensagens.map((mensagem) => {
+      {props.messageList.map((messageItem) => {
         return (
           <Text
-            key={mensagem.id}
+            key={messageItem.id}
             tag="li"
             styleSheet={{
               borderRadius: "5px",
@@ -239,13 +268,16 @@ function MessageList(props) {
               marginBottom: "12px",
               wordBreak: "break-word",
               hover: {
-                backgroundColor: appConfig.theme.colors.neutrals[700],
+                backgroundColor: "rgba( 0, 0, 0, 0.21 )",
               },
             }}
           >
             <Box
               styleSheet={{
                 marginBottom: "8px",
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
               }}
             >
               <Image
@@ -256,7 +288,7 @@ function MessageList(props) {
                   display: "inline-block",
                   marginRight: "8px",
                 }}
-                src={`https://github.com/${mensagem.de}.png`}
+                src={`https://github.com/${messageItem.user}.png`}
               />
               <Box
                 styleSheet={{
@@ -265,18 +297,19 @@ function MessageList(props) {
                   flexDirection: "column",
                   alignItems: "start",
                 }}
-              ></Box>
-              <Text tag="strong">{mensagem.de}</Text>
-              <Text
-                styleSheet={{
-                  fontSize: "10px",
-                  marginLeft: "8px",
-                  color: appConfig.theme.colors.neutrals[300],
-                }}
-                tag="span"
               >
-                {new Date().toLocaleDateString()}
-              </Text>
+                <Text tag="strong">{messageItem.user}</Text>
+                <Text
+                  styleSheet={{
+                    fontSize: "10px",
+                    marginTop: "5px",
+                    color: appConfig.theme.colors.neutrals[300],
+                  }}
+                  tag="span"
+                >
+                  {new Date().toLocaleDateString()}
+                </Text>
+              </Box>
               <Text
                 onClick={handleDeleteMessage}
                 styleSheet={{
@@ -299,18 +332,17 @@ function MessageList(props) {
                 X
               </Text>
             </Box>
-            {/* [Declarativo] */}
-            {/* Condicional: {mensagem.texto.startsWith(':sticker:').toString()} */}
-            {mensagem.texto.startsWith(":sticker:") ? (
-              <Image src={mensagem.texto.replace(":sticker:", "")} />
+            {/* {messageItem.text.startsWith(':sticker:').toString()} */}
+            {messageItem.text.startsWith(":sticker:") ? (
+              <Image src={messageItem.text.replace(":sticker:", "")} />
             ) : (
-              mensagem.texto
+              messageItem.text
             )}
-            {/* if mensagem de texto possui stickers:
-                           mostra a imagem
-                        else 
-                           mensagem.texto */}
-            {/* {mensagem.texto} */}
+            {/* if messageItem de texto possui stickers:
+                mostra a imagem
+            else
+                messageItem.texto */}
+            {/* {messageItem.text} */}
           </Text>
         );
       })}
